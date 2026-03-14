@@ -113,15 +113,29 @@ export async function getProgressLog(req, res) {
 export async function saveCheckpoint(req, res) {
   try {
     if (!req.user?.id) return res.status(401).json({ message: "Not logged in" });
+
     const { score = 0, mode = "easy", eggCount = 0, heartCount = 0, revivesUsed = 0 } = req.body;
+
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    user.checkpointScore = Math.max(0, Number(score) || 0);
-    user.checkpointMode = user.checkpointScore > 0 || Number(eggCount) > 0 ? normalizeMode(mode) : "";
-    user.checkpointEggs = user.checkpointMode ? Math.max(0, Number(eggCount) || 0) : 0;
-    user.checkpointHeartCount = user.checkpointMode ? Math.max(0, Number(heartCount) || 0) : 0;
-    user.checkpointRevivesUsed = user.checkpointMode ? Math.max(0, Number(revivesUsed) || 0) : 0;
+    const safeScore = Math.max(0, Number(score) || 0);
+    const safeEggCount = Math.max(0, Number(eggCount) || 0);
+    const safeHeartCount = Math.max(0, Number(heartCount) || 0);
+    const safeRevivesUsed = Math.max(0, Number(revivesUsed) || 0);
+
+    const hasCheckpoint =
+      safeScore > 0 ||
+      safeEggCount > 0 ||
+      safeHeartCount > 0 ||
+      safeRevivesUsed > 0;
+
+    user.checkpointScore = safeScore;
+    user.checkpointMode = hasCheckpoint ? normalizeMode(mode) : "";
+    user.checkpointEggs = hasCheckpoint ? safeEggCount : 0;
+    user.checkpointHeartCount = hasCheckpoint ? safeHeartCount : 0;
+    user.checkpointRevivesUsed = hasCheckpoint ? safeRevivesUsed : 0;
+
     await user.save();
 
     res.json({

@@ -10,15 +10,12 @@ const userschema = new mongoose.Schema(
 
     // auth / profile
     role: { type: String, required: true, enum: ["admin", "player"], default: "player" },
-    isBlocked: { type: Boolean, default: false, required: true },
-    isEmailVerified: { type: Boolean, default: false, required: true },
     image: { type: String, default: "/images/default-profile.png", required: true },
 
     // game stats
     highScore: { type: Number, default: 0 },
     lastScore: { type: Number, default: 0 },
     totalRuns: { type: Number, default: 0 },
-    coins: { type: Number, default: 0 },
     reviveCredits: { type: Number, default: 1 },
     checkpointScore: { type: Number, default: 0 },
     checkpointMode: { type: String, enum: ["easy", "medium", "hard", ""], default: "" },

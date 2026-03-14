@@ -1,9 +1,9 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+import "dotenv/config";
 
-dotenv.config();
+
 
 function signToken(user, rememberMe) {
   return jwt.sign(
