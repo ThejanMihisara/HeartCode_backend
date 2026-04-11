@@ -1,56 +1,70 @@
-import axios from "axios";
+import https from "https";
 
-function svgToBase64(svg) {
-  return Buffer.from(svg).toString("base64");
-}
+// Function to fetch the heart puzzle from the heart API
+async function getHeartPuzzle(req, res) {
+  try {
+ 
 
-function makeFallbackPuzzle() {
-  const a = Math.floor(Math.random() * 9) + 1;
-  const b = Math.floor(Math.random() * 9) + 1;
-  const c = Math.floor(Math.random() * 5) + 1;
-  const solution = a + b + c;
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="420" height="220" viewBox="0 0 420 220">
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#12273a"/>
-          <stop offset="100%" stop-color="#244964"/>
-        </linearGradient>
-      </defs>
-      <rect width="420" height="220" rx="28" fill="url(#bg)"/>
-      <text x="210" y="56" text-anchor="middle" fill="#f8fafc" font-size="24" font-family="Arial">Heart revive puzzle</text>
-      <text x="210" y="120" text-anchor="middle" fill="#fbbf24" font-size="54" font-weight="700" font-family="Arial">${a} + ${b} + ${c} = ?</text>
-      <text x="210" y="172" text-anchor="middle" fill="#cbd5e1" font-size="20" font-family="Arial">Enter the result to continue your run</text>
-    </svg>`;
+    const puzzleData = await new Promise((resolve, reject) => {
+      https.get('https://marcconrad.com/uob/heart/api.php?out=json&base64=no', (response) => {
+        let data = '';
+        response.on('data', (chunk) => {
+          data += chunk;
+        });
+        response.on('end', () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }).on('error', reject);
+    });
 
-  return { image: svgToBase64(svg), solution, source: "local-fallback", mime: "image/svg+xml" };
-}
+    const imageBuffer = await new Promise((resolve, reject) => {
+      https.get(puzzleData.question, (response) => {
+        const chunks = [];
+        response.on('data', (chunk) => {
+          chunks.push(chunk);
+        });
+        response.on('end', () => {
+          resolve(Buffer.concat(chunks));
+        });
+      }).on('error', reject);
+    });
 
-function normalizePuzzle(data) {
-  if (!data || typeof data !== "object") return null;
-  const image = data.image || data.question || data.img || data.base64 || null;
-  const solution = data.solution ?? data.answer ?? data.result ?? null;
-  if (!image || solution == null) return null;
-  return { image, solution, source: "heart-api", mime: "image/png" };
-}
+    const base64Image = imageBuffer.toString('base64');
 
-export async function getHeartPuzzle(req, res) {
-  const urls = [
-    "https://marcconrad.com/uob/heart/api.php?out=json&base64=yes",
-    "http://marcconrad.com/uob/heart/api.php?out=json&base64=yes",
-  ];
+  
+    const mimeType = puzzleData.question.includes('.png') ? 'image/png' :
+                     puzzleData.question.includes('.jpg') || puzzleData.question.includes('.jpeg') ? 'image/jpeg' :
+                     'image/png';
 
-  for (const url of urls) {
-    try {
-      const { data } = await axios.get(url, { timeout: 9000 });
-      const puzzle = normalizePuzzle(data);
-      if (puzzle) {
-        return res.json({ puzzle });
-      }
-    } catch {
-      // try next source
+   
+    const formattedPuzzle = {
+      image: base64Image,
+      mime: mimeType,
+      solution: puzzleData.solution
+    };
+
+    // Log the response for debugging
+    // console.log('Heart puzzle fetched successfully');
+
+    // Send the formatted puzzle data
+    res.json({ puzzle: formattedPuzzle });
+  } catch (error) {
+    // Log detailed error messages for debugging
+    console.error("Error fetching heart puzzle:", error);
+    console.error("Error details:", error.message);
+    if (error.response) {
+      console.error("Response status:", error.response.status);
+      console.error("Response data:", error.response.data);
     }
-  }
 
-  return res.json({ puzzle: makeFallbackPuzzle() });
+    // Return a detailed error message to the client
+    res.status(500).json({ error: "Failed to fetch heart puzzle", details: error.message });
+  }
 }
+
+
+export { getHeartPuzzle };
