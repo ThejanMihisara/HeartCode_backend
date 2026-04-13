@@ -59,6 +59,7 @@ async function makeUniqueUsername(base) {
   return candidate;
 }
 
+// Create a new user account
 export async function createUser(req, res) {
   try {
     const { firstName, lastName, email, password } = req.body;
@@ -81,6 +82,7 @@ export async function createUser(req, res) {
   }
 }
 
+// Authenticate user login
 export async function loginUser(req, res) {
   try {
     const { email, password, rememberMe } = req.body;
@@ -122,6 +124,7 @@ export async function loginUser(req, res) {
   }
 }
 
+// Logout user by clearing token
 export function logoutUser(req, res) {
   res.clearCookie("token", {
     httpOnly: true,
@@ -131,6 +134,7 @@ export function logoutUser(req, res) {
   res.json({ message: "Logged out" });
 }
 
+// Get current user profile
 export async function getMe(req, res) {
   try {
     if (!req.user?.id) return res.status(401).json({ message: "Not logged in" });
@@ -142,6 +146,7 @@ export async function getMe(req, res) {
   }
 }
 
+// Update current user profile
 export async function updateMe(req, res) {
   try {
     if (!req.user?.id) return res.status(401).json({ message: "Not logged in" });
@@ -195,6 +200,7 @@ export async function updateMe(req, res) {
   }
 }
 
+// Check if user is admin
 export function isAdmin(req) {
   return req.user?.role === "admin";
 }

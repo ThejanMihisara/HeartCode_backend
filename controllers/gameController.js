@@ -5,6 +5,7 @@ function normalizeMode(mode) {
   return ["easy", "medium", "hard"].includes(mode) ? mode : "easy";
 }
 
+// Submit a game run and update user stats
 export async function submitRun(req, res) {
   try {
     if (!req.user?.id) return res.status(401).json({ message: "Not logged in" });
@@ -46,6 +47,7 @@ export async function submitRun(req, res) {
   }
 }
 
+// Get top 10 players leaderboard
 export async function leaderboard(req, res) {
   try {
     const top = await User.find({ role: "player" })
@@ -59,6 +61,7 @@ export async function leaderboard(req, res) {
   }
 }
 
+// Consume one revive credit
 export async function consumeReviveCredit(req, res) {
   try {
     if (!req.user?.id) return res.status(401).json({ message: "Not logged in" });
@@ -79,6 +82,7 @@ export async function consumeReviveCredit(req, res) {
   }
 }
 
+// Get user's progress log and stats
 export async function getProgressLog(req, res) {
   try {
     if (!req.user?.id) return res.status(401).json({ message: "Not logged in" });
@@ -110,6 +114,7 @@ export async function getProgressLog(req, res) {
   }
 }
 
+// Save game checkpoint data
 export async function saveCheckpoint(req, res) {
   try {
     if (!req.user?.id) return res.status(401).json({ message: "Not logged in" });
@@ -150,6 +155,7 @@ export async function saveCheckpoint(req, res) {
   }
 }
 
+// Get user's saved checkpoint
 export async function getCheckpoint(req, res) {
   try {
     if (!req.user?.id) return res.status(401).json({ message: "Not logged in" });
@@ -167,6 +173,7 @@ export async function getCheckpoint(req, res) {
   }
 }
 
+// Clear user's checkpoint data
 export async function clearCheckpoint(req, res) {
   try {
     if (!req.user?.id) return res.status(401).json({ message: "Not logged in" });
