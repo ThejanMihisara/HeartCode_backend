@@ -20,12 +20,17 @@ mongoose
 
 const app = express();
 
-app.use(
-  cors({
-    origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
-    credentials: true,
-  })
-);
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";  // Default to localhost for development
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (origin === CLIENT_ORIGIN) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
 app.use(cookieParser());
 app.use(express.json());
 
